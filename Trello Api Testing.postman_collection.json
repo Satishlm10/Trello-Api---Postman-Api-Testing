@@ -1,0 +1,2290 @@
+{
+	"info": {
+		"_postman_id": "aa5af263-863e-4dca-8a07-af4262860129",
+		"name": "Trello Api Testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27028461"
+	},
+	"item": [
+		{
+			"name": "Trello Boards",
+			"item": [
+				{
+					"name": "Create Board",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"ResponseTime\",1000)\r",
+									"pm.environment.set(\"idOrganization\",\"67da64e01941928ec1e7f5d5\")"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"let boardname = \"Api Test Board\"\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									"\r",
+									"pm.test(`Board created has name: ${boardname}`,function(){\r",
+									"    pm.expect(jsonResponse.name).is.eql(`${boardname}`)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Created Board has an id\",function(){\r",
+									"    pm.expect(jsonResponse.id).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Newly created Board has Permission Level Private\",function(){\r",
+									"    pm.expect(jsonResponse.prefs.permissionLevel).is.eql(\"private\")\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Newly create board has background color blue\",function(){\r",
+									"    pm.expect(jsonResponse.prefs.background).is.eql(\"blue\")\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Newly Create board has viewType Board\",function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[0].enabled).is.eql(true)\r",
+									"})\r",
+									"pm.test(\"Newly Create board has viewType Table\",function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[1].enabled).is.eql(true)\r",
+									"})\r",
+									"pm.test(\"An url is created for a newly created board\",function(){\r",
+									"    pm.expect(jsonResponse.url).to.exist\r",
+									"})\r",
+									"pm.test(\"An shortUrl is created for a newly created board\",function(){\r",
+									"    pm.expect(jsonResponse.shortUrl).to.exist\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/?key={{key}}&name=Api Test Board&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "name",
+									"value": "Api Test Board"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Memberships of a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"const boradId = pm.environment.get(\"boardId\")\r",
+									"\r",
+									"pm.test(\"The membership board response should have 5 keys\",function(){\r",
+									"    pm.expect(Object.keys(jsonResponse[0]).length).is.eql(5)\r",
+									"})\r",
+									"\r",
+									"\r",
+									"pm.test(\"The correct member id should be received\",function(){\r",
+									"    pm.expect(jsonResponse[0].idMember).is.eql(\"67da64c9abc9ccdf5cd76803\")\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The member type of the user should be admin\",function(){\r",
+									"    pm.expect(jsonResponse[0].memberType).is.eql(\"admin\")\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The membership unconfirmed shoulde be false\",function(){\r",
+									"    pm.expect(jsonResponse[0].unconfirmed).is.eql(false)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The membership deactivated should be false\",function(){\r",
+									"    pm.expect(jsonResponse[0].deactivated).is.eql(false)\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/memberships?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"memberships"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"const boardId = pm.environment.get(\"boardId\")\r",
+									"const boardName = \"My Trello board\"\r",
+									"const boardColor = \"pink\"\r",
+									"const boardClosed = false\r",
+									"let boardViewType = null\r",
+									"let boardEnabled = null\r",
+									"const idOrganization = pm.environment.get(\"idOrganization\")\r",
+									"const boardUrl = pm.environment.set(\"boardUrl\",jsonResponse.url)\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The correct with the requested board id should be received\",function(){\r",
+									"    pm.expect(jsonResponse.id).is.eql(boardId)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The correct board name is received\",function(){\r",
+									"    pm.expect(jsonResponse.name).is.eql(boardName)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The board color should be ${boardColor}`,function(){\r",
+									"    pm.expect(jsonResponse.prefs.background).is.eql(boardColor)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The board status is ${boardClosed}`,function(){\r",
+									"    pm.expect(jsonResponse.closed).is.eql(boardClosed)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The board view switchers should of 6 types`,function(){\r",
+									"    pm.expect(Object.keys(jsonResponse.prefs.switcherViews).length).is.eql(6)\r",
+									"})\r",
+									"\r",
+									"boardViewType = \"Board\"\r",
+									"boardEnabled = true\r",
+									"pm.test(`The non premium user with viewType \\\"${boardViewType}\\\" should be enabled to ${boardEnabled}`,function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[0].enabled).is.eql(boardEnabled)\r",
+									"})\r",
+									"\r",
+									"boardViewType = \"Table\"\r",
+									"pm.test(`The non premium user with viewType \\\"${boardViewType}\\\" should be enabled to ${boardEnabled}`,function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[1].enabled).is.eql(boardEnabled)\r",
+									"})\r",
+									"\r",
+									"boardViewType = \"Calender\"\r",
+									"boardEnabled = false\r",
+									"pm.test(`The non premium user with viewType \\\"${boardViewType}\\\" should be enabled to ${boardEnabled}`,function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[2].enabled).is.eql(boardEnabled)\r",
+									"})\r",
+									"\r",
+									"boardViewType = \"Dashboard\"\r",
+									"pm.test(`The non premium user with viewType \\\"${boardViewType}\\\" should be enabled to ${boardEnabled}`,function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[3].enabled).is.eql(boardEnabled)\r",
+									"})\r",
+									"\r",
+									"boardViewType = \"Timeline\"\r",
+									"pm.test(`The non premium user with viewType \\\"${boardViewType}\\\" should be enabled to ${boardEnabled}`,function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[4].enabled).is.eql(boardEnabled)\r",
+									"})\r",
+									"\r",
+									"boardViewType = \"Map\"\r",
+									"pm.test(`The non premium user with viewType \\\"${boardViewType}\\\" should be enabled to ${boardEnabled}`,function(){\r",
+									"    pm.expect(jsonResponse.prefs.switcherViews[5].enabled).is.eql(boardEnabled)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The organization id should be ${idOrganization}`,function(){\r",
+									"    pm.expect(jsonResponse.idOrganization).is.eql(idOrganization)\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"const boardId = \"67da699f1a2c86803740e2c5\"\r",
+									"const boardName = \"Updated the board name\"\r",
+									"\r",
+									"pm.test(`The board with id ${boardId} should be updated`,function(){\r",
+									"    pm.expect(jsonResponse.id).is.eql(boardId)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The board name should match with the update name of the board`,function(){\r",
+									"    pm.expect(jsonResponse.name).is.eql(boardName)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The organization id for updated board should not change`,function(){\r",
+									"    pm.expect(jsonResponse.idOrganization).is.eql(pm.environment.get(\"idOrganization\"))\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Updated the board name\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlBoards}}/67da699f1a2c86803740e2c5?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"67da699f1a2c86803740e2c5"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Board",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlBoards}}/67dbacceb8bc531f5de57a4c?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"67dbacceb8bc531f5de57a4c"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a field on a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"const field = \"url\"\r",
+									"pm.test(`The value of the requested field ${field} should match`,function(){\r",
+									"    pm.expect(jsonResponse._value).is.eql(pm.environment.get(\"boardUrl\"))\r",
+									"})\r",
+									"pm.test(`Only the requested field should be received`,function(){\r",
+									"    pm.expect(Object.keys(jsonResponse).length).is.eql(1)\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/url?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"url"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Actions of a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"const boardId = pm.environment.get(\"boardId\")\r",
+									"\r",
+									"\r",
+									"pm.test(\"The actions of the correct board shoulde be displayed\",()=>{\r",
+									"    pm.expect(jsonResponse[0].data.board.id).is.eql(boardId)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The actions should contains action id\",()=>{\r",
+									"    pm.expect(jsonResponse.every(user=>user.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The actions should contains id of member that performed the action\",()=>{\r",
+									"    pm.expect(jsonResponse.every(user=>user.idMemberCreator)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The username of the member who performed the action should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(user=>user.memberCreator.username)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The fullname of the member who performed the action should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(user=>user.memberCreator.fullName)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The type of action performed by the user should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(user=>user.type)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The date of the action performed should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(user=>user.date)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/actions?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"actions"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get boardStars on a Board",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/boardStars?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"boardStars"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Checklists on a Board",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/checklists?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"checklists"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cards on a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"const boardId = pm.environment.get(\"boardId\")\r",
+									"console.log(boardId)\r",
+									"pm.test(\"At least one card exists on the board\",function(){\r",
+									"    pm.expect(jsonResponse[0]).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Card contains id of the board\",function(){\r",
+									"    pm.expect(jsonResponse[0].idBoard).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Card contains id of the list\",function(){\r",
+									"    pm.expect(jsonResponse[0].idList).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Card name should exist\",function(){\r",
+									"    pm.expect(jsonResponse[0].name).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Card url should exist\",function(){\r",
+									"    pm.expect(jsonResponse[0].url).to.exist\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/cards?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"cards"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get filtered Cards on a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The cards should contain card id\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The last activity date of the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.dateLastActivity)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The response should contain the id of Board in which the card belongs in.\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.idBoard)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The response should contain the id of List in which the card belongs in.\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.idList)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The url of the card should be received.\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.url)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.name)).to.exist\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/cards/open?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"cards",
+								"open"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get the Members of a Board",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"const boardOwner = \"joyboy40\"\r",
+									"const ownerPos = jsonResponse.pop()\r",
+									"console.log(ownerPos)\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The owner of the board should also be the member of the board\",()=>{\r",
+									"    pm.expect(ownerPos.username).is.eql(boardOwner)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The id of the memebers of the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.id)).to.exist\r",
+									"})\r",
+									"pm.test(\"The fullname of the memebers of the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.fullName)).to.exist\r",
+									"})\r",
+									"pm.test(\"The username of the memebers of the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.username)).to.exist\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/members?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"members"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a calendarKey for a Board",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/calenderKey/generate?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"calenderKey",
+								"generate"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a emailKey for a Board",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/emailKey/generate?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"emailKey",
+								"generate"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Board as viewed",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/markedAsViewed?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"markedAsViewed"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Invite Member to Board via emailequest",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"pm.test(\"The already invited member should have status code 403\",()=>{\r",
+									"    pm.response.to.have.status(403)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The member should wait 60 minutes if the invitation quote exceeds\",()=>{\r",
+									"    pm.response.to.have.status(429)\r",
+									"})\r",
+									"pm.test(\"The member should be invited to the intended board\",()=>{\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The response should contain the details of all the member\",()=>{\r",
+									"    pm.expect(jsonResponse.members).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The response should contain the id of the members\",()=>{\r",
+									"    pm.expect(jsonResponse.members.every(res=>res.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The response should contain the username of the members\",()=>{\r",
+									"    pm.expect(jsonResponse.members.every(res=>res.username)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The response should contain the fullName of the members\",()=>{\r",
+									"    pm.expect(jsonResponse.members.every(res=>res.fullName)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The response should contain the memberType of the members\",()=>{\r",
+									"    pm.expect(jsonResponse.members.every(res=>res.memberType)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The membership details of the members shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.memberships).to.exist\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlBoards}}/{{boardId}}/members?email=test{{$randomInt}}@test.com&key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlBoards}}"
+							],
+							"path": [
+								"{{boardId}}",
+								"members"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "test{{$randomInt}}@test.com"
+								},
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Lists",
+			"item": [
+				{
+					"name": "Get Lists",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"const boardId = pm.environment.get(\"boardId\")\r",
+									"const listName = \"New List\"\r",
+									"\r",
+									"\r",
+									"pm.test(`The correct list is retrevied`,function(){\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"listId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(`The name of the list should be ${listName}`,function(){\r",
+									"    pm.expect(jsonResponse.name).is.eql(listName)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The id of board which the list belongs in should be displayed\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The color of the list shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.color).is.eql(null)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The position of the list should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.pos).to.exist\r",
+									"})\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLists}}/67da7c52fa5d9901fae74e4d?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"67da7c52fa5d9901fae74e4d"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(`The correct list is retrevied`,function(){\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"listId\"))\r",
+									"})\r",
+									"\r",
+									"\r",
+									"pm.test(\"The id of board which the list belongs in should be displayed\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The color of the list shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.color).is.eql(null)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The position of the list should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.pos).to.exist\r",
+									"})\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Update List Name\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlLists}}/{{listId}}?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"{{listId}}"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a new List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The newly created list should have id\",()=>{\r",
+									"    pm.expect(jsonResponse.id).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The newly created list should have color null\",()=>{\r",
+									"    pm.expect(jsonResponse.color).is.eql(null)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The list should be created in the intended board\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The newly created list should be in closed status\",()=>{\r",
+									"    pm.expect(jsonResponse.closed).is.eql(false)\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlLists}}?name=New List&idBoard={{boardId}}&key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "New List"
+								},
+								{
+									"key": "idBoard",
+									"value": "{{boardId}}"
+								},
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Archive all Cards in List",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLists}}/67da64e2c1194d31882f1227/archiveAllCards?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"67da64e2c1194d31882f1227",
+								"archiveAllCards"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Archive or unarchive a list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLists}}/{{listId}}/closed?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"{{listId}}",
+								"closed"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move List to Board",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLists}}/67da64e2c1194d31882f1227/idBoard?value={{boardId}}&key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"67da64e2c1194d31882f1227",
+								"idBoard"
+							],
+							"query": [
+								{
+									"key": "value",
+									"value": "{{boardId}}"
+								},
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a field on a List",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Updated Field\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{boardUrl}}/67da7c52fa5d9901fae74e4d/name?key={{key}}&token={{token}}",
+							"host": [
+								"{{boardUrl}}"
+							],
+							"path": [
+								"67da7c52fa5d9901fae74e4d",
+								"name"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Actions for a List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"At least one of the action on the list should received\",()=>{\r",
+									"    pm.expect(jsonResponse.length).is.greaterThan(0)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The actions on a list should have action id\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The id of the member on the board who performed the action on the list shoule be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.idMemberCreator)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the list in which the action has been performed should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.data.list.name)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The id of the list in which the action has been performed should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.data.list.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The id of the board in which the action has been performed should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.data.board.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the board in which the action has been performed should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.data.board.name)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The type of the action performed shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.type)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The date when the action was performed shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.date)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The details of the member who performed the action should be displayed\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.memberCreator)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The fullname of the user who performed the action should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.memberCreator.fullName)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The username of the user who performed the action should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.memberCreator.username)).to.exist\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLists}}/67da7c52fa5d9901fae74e4d/actions?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"67da7c52fa5d9901fae74e4d",
+								"actions"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get the Board a List is on",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"const boardId = pm.environment.get(\"boardId\")\r",
+									"const boardName = \"My Trello board\"\r",
+									"\r",
+									"pm.test(`The list belongs to the appropriate board ${boardId}`,function(){\r",
+									"    pm.expect(jsonResponse.id).is.eql(boardId)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The list belongs to the board ${boardName}`,function(){\r",
+									"    pm.expect(jsonResponse.name).is.eql(boardName)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The list belongs to the organization with id ${pm.environment.get(\"idOrganization\")}`,function(){\r",
+									"    pm.expect(jsonResponse.idOrganization).is.eql(pm.environment.get(\"idOrganization\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The board url shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.url).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The board preferences should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.prefs).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The labels in the board shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.labelNames).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The last activity on the board shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.dateLastActivity).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The last view date of the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.dateLastView).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The member of the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.memberships).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The id of the members in the board should received.\",()=>{\r",
+									"    pm.expect(jsonResponse.memberships.every(res=>res.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The memberType of the board members should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.memberships.every(res=>res.memberType)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The premium features on the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.premiumFeatures).to.exist\r",
+									"})\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLists}}/{{listId}}/board?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"{{listId}}",
+								"board"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cards in a List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The id of the cards should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The last activity date on the card should be displayed\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.dateLastActivity)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The board id of the card which it exist in should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.idBoard)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The list id of the card which it exist in should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.idList)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.name)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The url of the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.every(res=>res.url)).to.exist\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLists}}/{{listId}}/cards?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLists}}"
+							],
+							"path": [
+								"{{listId}}",
+								"cards"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cards",
+			"item": [
+				{
+					"name": "Create a new Card",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The newly created card should have an id\",()=>{\r",
+									"    pm.expect(jsonResponse.id).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The newly created card should have an id\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The newly created card should have an id\",()=>{\r",
+									"    pm.expect(jsonResponse.idList).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The newly create card should have empty labels\",()=>{\r",
+									"    pm.expect(jsonResponse.labels.isEmpty()).is.eql(true)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the card shouldn't change\",()=>{\r",
+									"    pm.expect(jsonResponse.name).is.eql(pm.environment.get(\"cardName\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The card should have role null when newly created\",()=>{\r",
+									"    pm.expect(jsonResponse.cardRole).is.eql(null)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The newly created card should have an url\",()=>{\r",
+									"    pm.expect(jsonResponse.url).to.exist\r",
+									"})\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"{{cardName}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlCards}}/?idList={{listId}}&key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								""
+							],
+							"query": [
+								{
+									"key": "idList",
+									"value": "{{listId}}"
+								},
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a Card",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The requested card should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"cardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the card should be match\",()=>{\r",
+									"    pm.expect(jsonResponse.name).is.eql(pm.environment.get(\"cardName\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The card should be from the intended board\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The card should be from the intended list\",()=>{\r",
+									"    pm.expect(jsonResponse.idList).is.eql(pm.environment.get(\"listId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The url of the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.url).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The labels for the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.labels).to.exist\r",
+									"})\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlCards}}/{{cardId}}/?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								"{{cardId}}",
+								""
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a field on a Card",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The field requested should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse._value).is.eql(pm.environment.get(\"cardName\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlCards}}/{{cardId}}/{{cardField}}?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								"{{cardId}}",
+								"{{cardField}}"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Actions on a Card",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlCards}}/{{cardId}}/actions?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								"{{cardId}}",
+								"actions"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get the Board the Card is on",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"const boardId = pm.environment.get(\"boardId\")\r",
+									"const boardName = \"My Trello board\"\r",
+									"\r",
+									"pm.test(`The list belongs to the appropriate board ${boardId}`,function(){\r",
+									"    pm.expect(jsonResponse.id).is.eql(boardId)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The list belongs to the board ${boardName}`,function(){\r",
+									"    pm.expect(jsonResponse.name).is.eql(boardName)\r",
+									"})\r",
+									"\r",
+									"pm.test(`The list belongs to the organization with id ${pm.environment.get(\"idOrganization\")}`,function(){\r",
+									"    pm.expect(jsonResponse.idOrganization).is.eql(pm.environment.get(\"idOrganization\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The board url shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.url).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The board preferences should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.prefs).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The labels in the board shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.labelNames).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The last activity on the board shoulde be received\",()=>{\r",
+									"    pm.expect(jsonResponse.dateLastActivity).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The last view date of the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.dateLastView).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The member of the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.memberships).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The id of the members in the board should received.\",()=>{\r",
+									"    pm.expect(jsonResponse.memberships.every(res=>res.id)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The memberType of the board members should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.memberships.every(res=>res.memberType)).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The premium features on the board should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.premiumFeatures).to.exist\r",
+									"})\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlCards}}/{{cardId}}/board?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								"{{cardId}}",
+								"board"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get the List of a Card",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The id of the list should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"listId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the list should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.name).is.eql(\"Update List Name\")\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The organization id should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.idOrganization).is.eql(pm.environment.get(\"idOrganization\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The board id should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlCards}}/{{cardId}}/list?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								"{{cardId}}",
+								"list"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a Card",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The requested card should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"cardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The card should be from the intended board\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The card should be from the intended list\",()=>{\r",
+									"    pm.expect(jsonResponse.idList).is.eql(pm.environment.get(\"listId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The url of the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.url).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The labels for the card should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.labels).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"updated card\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlCards}}/{{cardId}}?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								"{{cardId}}"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a Card",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The deletion of unavailable card should have status code 404\",()=>{\r",
+									"     pm.expect(pm.response.code).to.equal(404);\r",
+									"})\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlCards}}/67dbcc4d5a0ab8934d42029e?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlCards}}"
+							],
+							"path": [
+								"67dbcc4d5a0ab8934d42029e"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Label",
+			"item": [
+				{
+					"name": "Get a Label",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The id of the label should match\",()=>{\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"labelId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The label should be of the intended board\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.name).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The color of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.color).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The number of usage of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.uses).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLabels}}/{{labelId}}?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLabels}}"
+							],
+							"path": [
+								"{{labelId}}"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a Label",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The id of the label should match\",()=>{\r",
+									"    pm.expect(jsonResponse.id).is.eql(pm.environment.get(\"labelId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The label should be of the intended board\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.name).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The color of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.color).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The number of usage of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.uses).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"updated ongoing\",\r\n \"color\":\"pink\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrlLabels}}/{{labelId}}?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLabels}}"
+							],
+							"path": [
+								"{{labelId}}"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a Label",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonResponse = pm.response.json()\r",
+									"\r",
+									"pm.test(\"The a new id for the new label should be received\",()=>{\r",
+									"    pm.expect(jsonResponse.id).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The label should be of the intended board\",()=>{\r",
+									"    pm.expect(jsonResponse.idBoard).is.eql(pm.environment.get(\"boardId\"))\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The name of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.name).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The color of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.color).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The number of usage of the label should be retrieved\",()=>{\r",
+									"    pm.expect(jsonResponse.uses).to.exist\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The limit of the label should be empty\",()=>{\r",
+									"     pm.expect(Object.keys(jsonResponse.limits).length).to.eql(0);\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLabels}}?name=progressing&color=yellow&idBoard={{boardId}}&key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLabels}}"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "progressing"
+								},
+								{
+									"key": "color",
+									"value": "yellow"
+								},
+								{
+									"key": "idBoard",
+									"value": "{{boardId}}"
+								},
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a Label",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The status code is 200\", function () {\r",
+									"    pm.expect(pm.response.code).to.equal(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(`Response Time is less than ${pm.environment.get(\"ResponseTime\")}ms`,function(){\r",
+									"     pm.expect(pm.response.responseTime).to.be.below(pm.environment.get(\"ResponseTime\"));\r",
+									"})\r",
+									"\r",
+									"pm.test(\"The resource to be deleted if it is unavailable should have status code 404\",()=>{\r",
+									"     pm.expect(pm.response.code).to.equal(404);\r",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrlLabels}}/67dd42abe4301e22bbc22f32?key={{key}}&token={{token}}",
+							"host": [
+								"{{baseUrlLabels}}"
+							],
+							"path": [
+								"67dd42abe4301e22bbc22f32"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{key}}"
+								},
+								{
+									"key": "token",
+									"value": "{{token}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
